@@ -4,16 +4,17 @@ import { weatherIcons } from './weatherIcons';
 
 const WeeklyForecast = () => {
   const [forecastData, setForecastData] = useState([
-    { day: 'Monday', temp: '', icon: 'sunny', precipitationChance: '' },
     { day: 'Tuesday', temp: '', icon: 'sunny', precipitationChance: '' },
     { day: 'Wednesday', temp: '', icon: 'sunny', precipitationChance: '' },
     { day: 'Thursday', temp: '', icon: 'sunny', precipitationChance: '' },
     { day: 'Friday', temp: '', icon: 'sunny', precipitationChance: '' },
+    { day: 'Saturday', temp: '', icon: 'sunny', precipitationChance: '' },
   ]);
   const [submittedData, setSubmittedData] = useState(null);
 
-  const convertToFahrenheit = (celsius) => {
-    return (celsius * 9) / 5 + 32;
+  // Convert Fahrenheit to Celsius
+  const convertToCelsius = (fahrenheit) => {
+    return ((fahrenheit - 32) * 5) / 9;
   };
 
   const handleInputChange = (index, field, value) => {
@@ -25,7 +26,7 @@ const WeeklyForecast = () => {
   const handleSubmit = () => {
     const updatedForecastData = forecastData.slice(0, 5).map((forecast) => ({
       ...forecast,
-      temp: forecast.temp ? convertToFahrenheit(parseFloat(forecast.temp)) : '',
+      temp: forecast.temp ? parseFloat(forecast.temp) : '',
     }));
 
     setSubmittedData(updatedForecastData);
@@ -51,11 +52,16 @@ const WeeklyForecast = () => {
 
     data.forEach((forecast, index) => {
       const { day, temp, icon, precipitationChance } = forecast;
+      const tempInCelsius = temp ? convertToCelsius(temp).toFixed(1) : '';
 
       // Draw the background box for each day
       doc.setDrawColor(0);
       doc.setFillColor(240, 240, 240); // Light gray background
       doc.rect(xPosition, yPosition, boxWidth, boxHeight, 'F');
+
+      // Draw the day of the week on top of the box
+      doc.setFontSize(12);
+      doc.text(day, xPosition + 5, yPosition - 5); // Positioning the day text above the box
 
       // Icon
       const iconUrl = weatherIcons[icon];
@@ -66,11 +72,10 @@ const WeeklyForecast = () => {
         console.error('Icon not found for', icon);
       }
 
-      // Text content (Day, Temperature, Precipitation)
+      // Text content (Temperature in Fahrenheit and Celsius, Precipitation)
       doc.setFontSize(10);
       doc.setTextColor(0);
-      doc.text(day, xPosition + 5, yPosition + 35);
-      doc.text(`${temp}°F`, xPosition + 5, yPosition + 40);
+      doc.text(`${temp}°F / ${tempInCelsius}°C`, xPosition + 5, yPosition + 35);
       doc.text(`Precip: ${precipitationChance}%`, xPosition + 5, yPosition + 45);
 
       // Update position for next box
@@ -92,9 +97,10 @@ const WeeklyForecast = () => {
       <div className="input-container">
         {forecastData.map((forecast, index) => (
           <div key={index} className="forecast-entry">
+            <label>{forecast.day}</label>
             <input
               type="number"
-              placeholder="Temp in °C"
+              placeholder="Temp in °F"
               value={forecast.temp}
               onChange={(e) => handleInputChange(index, 'temp', e.target.value)}
             />
@@ -125,7 +131,7 @@ const WeeklyForecast = () => {
             <div key={index} className="grid-item">
               <div className="forecast-box">
                 <p>{forecast.day}</p>
-                <p>{forecast.temp}°F</p>
+                <p>{forecast.temp}°F / {convertToCelsius(forecast.temp).toFixed(1)}°C</p>
                 <p>{forecast.precipitationChance}%</p>
                 <img src={weatherIcons[forecast.icon]} alt={forecast.icon} width="40" height="40" />
               </div>
