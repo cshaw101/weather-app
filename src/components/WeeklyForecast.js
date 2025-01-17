@@ -5,12 +5,10 @@ import { weatherIcons } from './weatherIcons';
 const WeeklyForecast = () => {
   const [forecastData, setForecastData] = useState([
     { day: 'Monday', temp: '', icon: 'sunny', precipitationChance: '' },
-    { day: 'Tuesday', temp: '', icon: 'cloudy', precipitationChance: '' },
-    { day: 'Wednesday', temp: '', icon: 'rain', precipitationChance: '' },
-    { day: 'Thursday', temp: '', icon: 'thunderstorm', precipitationChance: '' },
-    { day: 'Friday', temp: '', icon: 'snow', precipitationChance: '' },
-    { day: 'Saturday', temp: '', icon: 'fog', precipitationChance: '' },
-    { day: 'Sunday', temp: '', icon: 'partlyCloudy', precipitationChance: '' },
+    { day: 'Tuesday', temp: '', icon: 'sunny', precipitationChance: '' },
+    { day: 'Wednesday', temp: '', icon: 'sunny', precipitationChance: '' },
+    { day: 'Thursday', temp: '', icon: 'sunny', precipitationChance: '' },
+    { day: 'Friday', temp: '', icon: 'sunny', precipitationChance: '' },
   ]);
   const [submittedData, setSubmittedData] = useState(null);
 
@@ -25,7 +23,7 @@ const WeeklyForecast = () => {
   };
 
   const handleSubmit = () => {
-    const updatedForecastData = forecastData.map((forecast) => ({
+    const updatedForecastData = forecastData.slice(0, 5).map((forecast) => ({
       ...forecast,
       temp: forecast.temp ? convertToFahrenheit(parseFloat(forecast.temp)) : '',
     }));
@@ -40,35 +38,52 @@ const WeeklyForecast = () => {
     doc.setFontSize(18);
     doc.text('Weekly Weather Forecast', 20, 20);
 
-    let xPosition = 20;
+    const margin = 10;
+    const spaceBetweenBoxes = 10;
+    const maxWidth = doc.internal.pageSize.width - 2 * margin;
+
+    // Use smaller boxes: width and height reduced from 35x60 to 30x50
+    const boxWidth = 30;
+    const boxHeight = 50;
+    const boxesPerRow = Math.floor((maxWidth + spaceBetweenBoxes) / (boxWidth + spaceBetweenBoxes));
+    let xPosition = margin;
     let yPosition = 40;
 
     data.forEach((forecast, index) => {
       const { day, temp, icon, precipitationChance } = forecast;
 
+      // Draw the background box for each day
       doc.setDrawColor(0);
-      doc.setFillColor(240, 240, 240);
-      doc.rect(xPosition, yPosition, 120, 100, 'F');
+      doc.setFillColor(240, 240, 240); // Light gray background
+      doc.rect(xPosition, yPosition, boxWidth, boxHeight, 'F');
 
-      // Get icon image URL from the weatherIcons object
+      // Icon
       const iconUrl = weatherIcons[icon];
 
-      // Add the weather icon image (ensure your icon source is a proper image URL)
-      doc.addImage(iconUrl, 'PNG', xPosition + 40, yPosition + 5, 40, 40);
+      if (iconUrl) {
+        doc.addImage(iconUrl, 'PNG', xPosition + 2, yPosition + 5, 25, 25); // Adjusted icon size
+      } else {
+        console.error('Icon not found for', icon);
+      }
 
-      doc.setFontSize(12);
+      // Text content (Day, Temperature, Precipitation)
+      doc.setFontSize(10);
       doc.setTextColor(0);
-      doc.text(`${day}`, xPosition + 5, yPosition + 50);
-      doc.text(`Temp: ${temp}°F`, xPosition + 5, yPosition + 60);
-      doc.text(`Precipitation: ${precipitationChance}%`, xPosition + 5, yPosition + 70);
+      doc.text(day, xPosition + 5, yPosition + 35);
+      doc.text(`${temp}°F`, xPosition + 5, yPosition + 40);
+      doc.text(`Precip: ${precipitationChance}%`, xPosition + 5, yPosition + 45);
 
-      xPosition += 140;
-      if (index === 4) {
-        xPosition = 20;
-        yPosition += 120; // Increase space for the second row
+      // Update position for next box
+      xPosition += boxWidth + spaceBetweenBoxes;
+
+      // Move to next row if necessary
+      if ((index + 1) % boxesPerRow === 0) {
+        xPosition = margin;
+        yPosition += boxHeight + spaceBetweenBoxes;
       }
     });
 
+    // Trigger PDF download
     doc.save('weekly_forecast.pdf');
   };
 
