@@ -53,7 +53,10 @@ const WeeklyForecast = () => {
   const [submittedData, setSubmittedData] = useState(null);
   const [raceName, setRaceName] = useState(''); // Track the race name
 
-  const convertToCelsius = (fahrenheit) => ((fahrenheit - 32) * 5) / 9;
+  const convertToCelsius = (fahrenheit) => {
+    const celsius = ((fahrenheit - 32) * 5) / 9;
+    return celsius.toFixed(2); // Rounds to 2 decimal places
+  };
   
 
   const handleInputChange = (index, field, value) => {
