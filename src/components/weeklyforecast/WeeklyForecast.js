@@ -34,14 +34,13 @@ const theme = createTheme({
 });
 
 const weatherIcons = {
-  sunny: './images/sun.png',  // Sunny icon (Example) yes 
-  cloudy: './images/cloudy.png', // Cloudy icon (Example) yes
-  rain: './images/heavy-rain.png',   // Rain icon (Example) yes
-  thunderstorm: './images/storm.png', // Thunderstorm icon yes
-  snow: './images/snow.png',  // Snow icon (Example) yes
+  sunny: './images/sun.png',  // Sunny icon (Example)
+  cloudy: './images/cloudy.png', // Cloudy icon (Example)
+  rain: './images/heavy-rain.png',   // Rain icon (Example)
+  thunderstorm: './images/storm.png', // Thunderstorm icon
+  snow: './images/snow.png',  // Snow icon (Example)
   partlyCloudy: './images/cloudy.png', // Partly Cloudy icon
 };
-
 
 const WeeklyForecast = () => {
   const [forecastData, setForecastData] = useState([
@@ -49,12 +48,13 @@ const WeeklyForecast = () => {
     { day: 'Wednesday', temp: '', icon: 'sunny', precipitationChance: '' },
     { day: 'Thursday', temp: '', icon: 'sunny', precipitationChance: '' },
     { day: 'Friday', temp: '', icon: 'sunny', precipitationChance: '' },
-    { day: 'Saturday', temp: '', icon: 'sunny', precipitationChance: '' },
+    { day: 'Saturday (Race Day)', temp: '', icon: 'sunny', precipitationChance: '' },
   ]);
   const [submittedData, setSubmittedData] = useState(null);
+  const [raceName, setRaceName] = useState(''); // Track the race name
 
   const convertToCelsius = (fahrenheit) => ((fahrenheit - 32) * 5) / 9;
-  const convertToFahrenheit = (celsius) => (celsius * 9) / 5 + 32;
+  
 
   const handleInputChange = (index, field, value) => {
     const newData = [...forecastData];
@@ -65,19 +65,22 @@ const WeeklyForecast = () => {
   const handleSubmit = () => {
     const updatedForecastData = forecastData.map((forecast) => ({
       ...forecast,
-      temp: forecast.temp ? convertToFahrenheit(parseFloat(forecast.temp)) : '',
+      temp: forecast.temp ? parseFloat(forecast.temp) : '', // Ensure temp is treated as number
     }));
-
+  
     setSubmittedData(updatedForecastData);
-    generatePDF(updatedForecastData);
+    generatePDF(updatedForecastData, raceName); // Make sure to pass raceName to PDF generation
   };
-
-  const generatePDF = (data) => {
-    // Create the jsPDF document with landscape orientation
+  
+  const generatePDF = (data, raceName) => {
     const doc = new jsPDF('l', 'mm', 'a4');  // 'l' is for landscape, 'mm' is for millimeters, 'a4' is the page size
+  
+    // Set font for the document
     doc.setFont('helvetica');
     doc.setFontSize(18);
-    doc.text('Weekly Weather Forecast', 20, 20);
+  
+    // Add weather forecast for {raceName} as title at the top of the page
+    doc.text(`Weather forecast for: ${raceName}`, 20, 20);
   
     const margin = 10;
     const spaceBetweenBoxes = 10;
@@ -113,8 +116,8 @@ const WeeklyForecast = () => {
       doc.setFontSize(12);
       doc.setTextColor(0); // Black text color
       doc.text(day, xPosition + 5, yPosition + boxWidth + 5);
-      doc.text(`${convertToCelsius(temp)}°C / ${temp}°F`, xPosition + 5, yPosition + boxWidth + 15);
-      doc.text(`Precip: ${precipitationChance}%`, xPosition + 5, yPosition + boxWidth + 25);
+      doc.text(`${temp ? temp : 'N/A'}°F / ${temp ? convertToCelsius(temp) : 'N/A'}°C`, xPosition + 5, yPosition + boxWidth + 15);
+      doc.text(`Precip: ${precipitationChance ? precipitationChance : 'N/A'}%`, xPosition + 5, yPosition + boxWidth + 25);
   
       // Move to next box position
       xPosition += boxWidth + spaceBetweenBoxes;
@@ -127,11 +130,8 @@ const WeeklyForecast = () => {
     });
   
     // Trigger PDF download
-    doc.save('weekly_forecast.pdf');
+    doc.save(`${raceName}_weather_forecast.pdf`);
   };
-  
-  
-  
   
 
   return (
@@ -141,6 +141,21 @@ const WeeklyForecast = () => {
           <Typography variant="h4" gutterBottom align="center" sx={{ color: '#fff' }}>
             Weekly Weather Forecast Input
           </Typography>
+
+          {/* Text box for race name */}
+          <TextField
+            label="Race Name"
+            variant="outlined"
+            fullWidth
+            value={raceName}
+            onChange={(e) => setRaceName(e.target.value)}
+            sx={{
+              marginBottom: '20px',
+              '& .MuiInputBase-root': {
+                backgroundColor: '#e3f2fd',
+              },
+            }}
+          />
 
           <Grid container spacing={4} justifyContent="center">
             {forecastData.map((forecast, index) => (
